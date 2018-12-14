@@ -1,0 +1,294 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+matches_data = read.csv(file='C:/Users/prajwal/Desktop/Analytics-and-Predictive-modeling-for-IPL-cricket-matches-master/matches.csv', header = T, stringsAsFactors = F )
+head(matches_data)
+```
+```{r}
+
+library(plyr)
+matches_data$winner<-mapvalues(matches_data$winner,c("Chennai Super Kings","Deccan Chargers",
+                                                     "Delhi Daredevils","Gujarat Lions",
+                                                     "Kings XI Punjab","Kochi Tuskers Kerala",
+                                                     "Kolkata Knight Riders","Mumbai Indians",
+                                                     "Pune Warriors","Rajasthan Royals",
+                                                     "Rising Pune Supergiants",
+                                                     "Royal Challengers Bangalore",
+                                                     "Sunrisers Hyderabad"),
+                                                     c("CSK","DC","DD","GL","KXIP","KTK","KKR","MI",
+                                                       "PW","RR","RPS","RCB","SH"))
+
+matches_data$team1<-mapvalues(matches_data$team1,c("Chennai Super Kings","Deccan Chargers",
+                                                   "Delhi Daredevils","Gujarat Lions",
+                                                   "Kings XI Punjab","Kochi Tuskers Kerala",
+                                                   "Kolkata Knight Riders","Mumbai Indians",
+                                                   "Pune Warriors","Rajasthan Royals",
+                                                   "Rising Pune Supergiants",
+                                                   "Royal Challengers Bangalore",
+                                                   "Sunrisers Hyderabad"),
+                                                   c("CSK","DC","DD","GL","KXIP","KTK","KKR","MI",
+                                                  "PW","RR","RPS","RCB","SH"))
+matches_data$team2<-mapvalues(matches_data$team2,c("Chennai Super Kings","Deccan Chargers",
+                                                   "Delhi Daredevils","Gujarat Lions",
+                                                   "Kings XI Punjab","Kochi Tuskers Kerala",
+                                                   "Kolkata Knight Riders","Mumbai Indians",
+                                                   "Pune Warriors","Rajasthan Royals",
+                                                   "Rising Pune Supergiants",
+                                                   "Royal Challengers Bangalore",
+                                                   "Sunrisers Hyderabad"),
+                                                   c("CSK","DC","DD","GL","KXIP","KTK","KKR","MI",
+                                                   "PW","RR","RPS","RCB","SH"))
+
+
+matches_data$toss_winner<-mapvalues(matches_data$toss_winner,c("Chennai Super Kings","Deccan Chargers",
+                                                               "Delhi Daredevils","Gujarat Lions",
+                                                               "Kings XI Punjab","Kochi Tuskers Kerala",
+                                                               "Kolkata Knight Riders","Mumbai Indians",
+                                                               "Pune Warriors","Rajasthan Royals",
+                                                               "Rising Pune Supergiants",
+                                                               "Royal Challengers Bangalore",
+                                                               "Sunrisers Hyderabad"),
+                                                               c("CSK","DC","DD","GL","KXIP","KTK",
+                                                                "KKR","MI","PW","RR","RPS","RCB","SH"))
+
+head(matches_data)
+
+```
+
+```{r}
+
+```
+
+
+```{r}
+# Barplot for team who won matches
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+
+success_team = matches_data %>% group_by(winner) %>% summarise(winner_cnt = n())
+success_team
+BP_success_team = ggplot(success_team) + geom_bar(aes(winner,winner_cnt, fill = winner), stat = 'identity') + coord_flip()
+BP_success_team
+```
+
+```{r}
+# Barplot for analysing if Toss-winning helped in winning matches
+
+y=0
+n=0
+for(i in 1:nrow(matches_data)){
+  if(matches_data$toss_winner[i]==matches_data$winner[i]){
+   y=y+1 
+  }
+}
+
+##y=291
+n=nrow(matches_data)-291
+
+
+winning_cnt = c(y,n)
+teams = c("toss_win_team_won_match" , "toss_win_team_lost_match ")
+df = data.frame(teams,winning_cnt, stringsAsFactors = F)
+df
+toss_sts = ggplot(df) + geom_bar(aes(teams,winning_cnt, fill = teams), stat = 'identity')
+toss_sts
+
+```
+
+```{r}
+#Barplot for analysing after winning toss did fielding first helped winning
+
+toss_factor_win<-matches_data %>% group_by(toss_decision) %>% filter(toss_winner==winner)%>% select('winner')
+toss_factor_win
+toss_factor_win$toss_decision<-as.factor(toss_factor_win$toss_decision)
+toss_factor_win$winner<-as.factor(toss_factor_win$winner)  
+
+ggplot(toss_factor_win,aes(x=winner,fill=factor(toss_decision)))+geom_bar(width = 0.5)+
+  xlab("Winning Teams after winning toss")+ylab("Count")+labs(fill="toss_decision")
+
+
+```
+
+```{r}
+
+#barplot for lossing match after winning the toss
+toss_factor_loss<-matches_data %>% group_by(toss_decision) %>% filter(toss_winner!=winner)%>% select('toss_winner')
+toss_factor_loss
+toss_factor_loss$toss_decision<-as.factor(toss_factor_loss$toss_decision)
+toss_factor_loss$toss_winner<-as.factor(toss_factor_loss$toss_winner)  
+
+ggplot(toss_factor_loss,aes(x=toss_winner,fill=factor(toss_decision)))+geom_bar(width = 0.5)+
+  xlab("Lossing Teams after winning toss")+ylab("Count")+labs(fill="toss_decision")
+
+```
+
+```{r}
+cities = matches_data %>% group_by(city) %>% summarise(city_count = n())
+cities
+BP_cities = ggplot(cities) + geom_bar(aes(city,city_count, fill = city), stat = 'identity') + coord_flip()
+BP_cities
+```
+
+```{r}
+
+season_mt_cnt = matches_data %>% group_by(season) %>% summarise(match_cnt = n()) %>% ggplot() + geom_bar(aes(season,match_cnt, fill = season), stat = 'identity')
+season_mt_cnt
+
+```
+
+```{r}
+# removing the rows with "missing" values in winner column
+
+iplmatches<-matches_data
+
+for(i in 1:nrow(iplmatches)){
+  if(iplmatches$winner[i]==""){
+    print(i)
+  }
+}
+
+iplmatches<-iplmatches[-c(242,487,512),]
+
+
+
+#Removing Required fields
+iplmatches<-subset(iplmatches,select=-c(umpire1,umpire2,umpire3,player_of_match,date))
+iplmatches<-subset(iplmatches,select=-c(result,dl_applied,season,id,win_by_wickets,win_by_runs))
+
+# Convert Character to factor
+iplmatches$city<-as.factor(iplmatches$city)
+iplmatches$team1<-as.factor(iplmatches$team1)
+iplmatches$team2<-as.factor(iplmatches$team2)
+iplmatches$toss_winner<-as.factor(iplmatches$toss_winner)
+iplmatches$toss_decision<-as.factor(iplmatches$toss_decision)
+iplmatches$winner<-as.factor(iplmatches$winner)
+iplmatches$venue<-as.factor(iplmatches$venue)
+
+head(iplmatches)
+
+```
+
+
+```{r}
+
+# *for toss decision*
+
+library(caret)
+
+# Building models
+
+
+iplmatches1<-iplmatches%>% filter(winner==toss_winner)
+
+
+control<-trainControl(method="cv",number=10)
+metric<-"Accuracy"
+lda_model<-train(toss_decision~.,data=iplmatches,methods="lda",metric=metric,trControl=control)
+lda_model
+
+iplmatches_new<-subset(iplmatches,select=-c(toss_decision))
+pred_1<-predict(lda_model,newdata=iplmatches_new)
+confusionMatrix(pred_1,iplmatches$toss_decision)
+
+```
+
+```{r}
+
+# Crossvalidation 
+# *divide the total set into train and test set*
+
+
+id=sample(2,nrow(iplmatches),prob=c(0.7,0.3),replace = T)
+tossDecision_train<-iplmatches[id==1,] 
+tossDecision_test<-iplmatches[id==2,]
+
+tossDecision_test1<-subset(tossDecision_test,select=-c(toss_decision))
+
+control<-trainControl(method="cv",number=10)
+metric<-"Accuracy"
+
+fit.lda_model<-train(toss_decision~.,data=tossDecision_train,methods="lda",metric=metric,trControl=control)
+fit.lda_model
+
+pred_1<-predict(fit.lda_model,newdata=tossDecision_test1)
+confusionMatrix(pred_1,tossDecision_test$toss_decision)
+
+```
+
+```{r}
+
+###########Predctions
+toss_prediction<-function(team1,team2,city,toss_winner,venue){
+  accept<-data.frame(city=c(city),team1=c(team1),team2=c(team2),
+                     toss_winner=c(toss_winner),winner=c(toss_winner),venue=c(venue))
+  return(predict(lda_model,accept))
+}
+```
+
+```{r}
+
+
+team1<-readline(prompt="Enter team1 : ")
+team2<-readline(prompt="Enter team2 : ")
+city<-readline(prompt="Enter city : ")
+toss_winner<-readline(prompt="Enter toss_winner : ")
+venue<-readline(prompt="Enter venue : ")
+
+pre_decision<-toss_prediction(team1,team2,city,toss_winner,venue)
+pre_decision
+
+```
+
+
+```{r}
+
+library(randomForest)
+
+iplmatches_win<-iplmatches
+new.data<-subset(iplmatches_win,select=-c(winner))
+win_lda_model<-train(winner~.,data=iplmatches_win,methods="lda",metric=metric,trControl=control)
+win_model_random<-randomForest(winner~.,data=iplmatches_win,importance = TRUE,ntree=100)
+
+predict<-predict(win_model_random,newdata = new.data)
+confusionMatrix(predict,iplmatches_win$winner)
+
+```
+
+```{r}
+
+###########Predctions
+win_prediction<-function(team1,team2,city,toss_winner,toss_decision,venue){
+  accept2<-data.frame(city=c(city),team1=c(team1),team2=c(team2),
+                      toss_winner=c(toss_winner),toss_decision=c(toss_decision),venue=c(venue))
+  return(predict(win_lda_model,accept2))
+}
+
+# Taking Input
+#team1<-readline(prompt="Enter team1 : ")
+#team2<-readline(prompt="Enter team2 : ")
+#city<-readline(prompt="Enter city : ")
+#toss_winner<-readline(prompt="Enter toss_winner : ")
+#toss_decision<-readline(prompt="Enter toss_decision : ")
+#venue<-readline(prompt="Enter venue : ")
+
+
+#pre_win<-win_prediction(team1,team2,city,toss_winner,toss_decision,venue)
+pre_win<-win_prediction('MI','CSK','Mumbai','MI','bat','Wankhede Stadium')
+pre_win
+
+
+```
+
+
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
